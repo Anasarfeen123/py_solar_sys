@@ -15,15 +15,16 @@ class planet:
         self.velx = float(velocity[0])
         self.vely = float(velocity[1])
         self.path = []
+        self.age = 0
 
     def draw(self, screen, camera_pos, zoom, screen_w, screen_h):
         sx = (self.x - camera_pos[0]) * zoom + screen_w // 2
         sy = (self.y - camera_pos[1]) * zoom + screen_h // 2
         pygame.draw.circle(screen, self.color, (int(sx), int(sy)), max(1, int(self.radius * zoom)))
 
-
     def move_real(self, *bodies):
         G = 1  # scaled constant for fun
+        self.age += 1
         ax_total, ay_total = 0, 0
 
         for body in bodies:
@@ -36,10 +37,11 @@ class planet:
             ax_total += force * dx / (r * self.mass)
             ay_total += force * dy / (r * self.mass)
 
-        self.velx += ax_total
-        self.vely += ay_total
-        self.x += self.velx
-        self.y += self.vely
+        dt = 0.1
+        self.velx += ax_total * dt
+        self.vely += ay_total * dt
+        self.x += self.velx * dt
+        self.y += self.vely * dt
 
         self.path.append((self.x, self.y))
         self.path = self.path[-200:]
@@ -55,28 +57,34 @@ class planet:
         if collided_objects:
             return collided_objects
         return None
-    
+
     def merge(self, *bodies):
         bodies_n = self.detect_collision(*bodies)
-        b = [self, self.density]
         to_remove = []
+
         if bodies_n:
             for body in bodies_n:
-                if (b[1] < body.density and b[0].name != "star") or (body.name == "star" and b[0].name != "star") or ((body.name == "star" and b[0].name == "star") and b[1] < body.density):
-                    b[0] = body
-                    b[1] = body.density
-                else:
+                if self.age < 30 or body.age < 30:
+                    continue  
+                if body.name == "star" and self.name != "star":
+                    return [self]  # this planet removed
+                elif self.name == "star" and body.name != "star":
                     to_remove.append(body)
-            if (self.name == b[0].name) and not (self is b[0]):
-                org_mass = b[0].mass
-                b[0].mass += self.mass
-                b[0].velx = ((org_mass * b[0].velx) + (self.mass * self.velx)) / b[0].mass
-                b[0].vely = ((org_mass * b[0].vely) + (self.mass * self.vely)) / b[0].mass
-                b[0].x = ((org_mass * b[0].x) + (self.mass * self.x)) / b[0].mass
-                b[0].y = ((org_mass * b[0].y) + (self.mass * self.y)) / b[0].mass
-                b[0].radius = math.sqrt(b[0].mass / (math.pi * b[0].density))
-            return to_remove
                 
+                else:
+                    total_mass = self.mass + body.mass
+                    self.velx = (self.velx * self.mass + body.velx * body.mass) / total_mass
+                    self.vely = (self.vely * self.mass + body.vely * body.mass) / total_mass
+                    self.x = (self.x * self.mass + body.x * body.mass) / total_mass
+                    self.y = (self.y * self.mass + body.y * body.mass) / total_mass
+                    self.mass = total_mass
+                    self.radius = math.sqrt(self.mass / (math.pi * self.density))
+                    to_remove.append(body)
+
+            return to_remove
+
+        return []
+
     def draw_path(self, screen, camera_pos, zoom, screen_w, screen_h):
         if len(self.path) > 2:
             points = [((x - camera_pos[0]) * zoom + screen_w // 2,

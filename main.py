@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, math
 import planetarybody
 
 pygame.init()
@@ -29,6 +29,15 @@ def world_to_screen(x, y, camera_pos, zoom, screen_w, screen_h):
     sy = (y - camera_pos[1]) * zoom + screen_h // 2
     return int(sx), int(sy)
 
+def safe_spawn(x, y, bodies, radius=40):
+    for body in bodies:
+        dx = body.x - x
+        dy = body.y - y
+        if math.sqrt(dx**2 + dy**2) <= body.radius + radius:
+            return None
+    return planetarybody.planet(screen, "green", 80, radius, (x, y), (0, 0), (width, height))
+
+
 while Running:
     clock.tick(60)
     for event in pygame.event.get():
@@ -37,9 +46,9 @@ while Running:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             world_x = (event.pos[0] - screen.get_width()//2) / zoom + Camera_pos[0]
             world_y = (event.pos[1] - screen.get_height()//2) / zoom + Camera_pos[1]
-            new_planet = planetarybody.planet(screen, "green", 80, 40, (world_x, world_y), (0, 0), (width, height))
-            bodies.add(new_planet)
-        
+            new_planet = safe_spawn(world_x, world_y, bodies, radius=40)
+            if new_planet:
+                bodies.add(new_planet)        
         elif event.type == pygame.MOUSEBUTTONDOWN and (event.button == 2 or event.button == 3):
             changing_cam = True
             pygame.mouse.get_rel()
@@ -69,18 +78,19 @@ while Running:
 
     to_remove_all = set()
     for body in list(bodies):
-        others = [b for b in bodies if b is not body]
+        if body in to_remove_all:
+            continue
+        others = [b for b in bodies if b is not body and b not in to_remove_all]
         losers = body.merge(*others)
         if losers:
             to_remove_all.update(losers)
     bodies.difference_update(to_remove_all)
-
 
     if changing_cam:
         dx, dy = pygame.mouse.get_rel()
         Camera_pos = (Camera_pos[0] - dx/zoom, Camera_pos[1] - dy/zoom)
 
     pygame.display.flip()
-        
+
 pygame.quit()
 sys.exit()

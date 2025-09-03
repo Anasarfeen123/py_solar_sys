@@ -28,8 +28,8 @@ Example:
 
 Clone the repo:
 ```bash
-git clone https://github.com/Anasarfeen123/gravity-sim.git
-cd gravity-sim
+git clone https://github.com/Anasarfeen123/py_solar_sys.git
+cd py_solar_sys
 ```
 
 Install dependencies:

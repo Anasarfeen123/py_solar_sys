@@ -23,7 +23,7 @@ class planet:
         pygame.draw.circle(screen, self.color, (int(sx), int(sy)), max(1, int(self.radius * zoom)))
 
     def move_real(self, *bodies):
-        G = 1  # scaled constant for fun
+        G = 10  # scaled constant for fun
         self.age += 1
         ax_total, ay_total = 0, 0
 

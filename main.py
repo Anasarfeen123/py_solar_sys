@@ -14,9 +14,9 @@ Maximized = True
 space = pygame.Surface((width, height))
 
 bodies = set()
-Sun = planetarybody.star(space, "yellow", 1000, 200, (width//2, height//2), (0, 0), (width, height))
-Earth = planetarybody.planet(space, "blue", 300, 100, (width//2 - (300), height//2 - (300)), (-2, 1), (width, height))
-Mercury = planetarybody.planet(space, "white", 50, 30, (width//2 + (300), height//2 + (300)), (-1.15, 1), (width, height))
+Sun = planetarybody.star(space, "yellow", 500, 200, (width//2, height//2), (0, 0), (width, height))
+Earth = planetarybody.planet(space, "blue", 300, 100, (width//2 - (300), height//2 - (300)), (-8, 4), (width, height))
+Mercury = planetarybody.planet(space, "white", 50, 30, (width//2 + (300), height//2 + (300)), (-4.6, 4), (width, height))
 bodies.update([Sun, Earth, Mercury])
 
 Running = True
@@ -35,8 +35,7 @@ def safe_spawn(x, y, bodies, radius=40):
         dy = body.y - y
         if math.sqrt(dx**2 + dy**2) <= body.radius + radius:
             return None
-    return planetarybody.planet(screen, "green", 80, radius, (x, y), (0, 0), (width, height))
-
+    return planetarybody.planet(screen, "green", 80, radius, (x, y), (1, 1), (width, height))
 
 while Running:
     clock.tick(60)
@@ -66,7 +65,7 @@ while Running:
                 Maximized = not Maximized
 
     screen.fill((0, 0, 0))
-    
+
     if not Paused:
         for body in bodies:
             others = [b for b in bodies if b is not body]
